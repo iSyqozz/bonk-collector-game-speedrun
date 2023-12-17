@@ -17,7 +17,7 @@ import { createNewGameTx, generate_transactions, getHighscore, getSoarProgramIns
 import { SoarProgram, GameType, Genre, GameClient } from "@magicblock-labs/soar-sdk";
 import { leaderBoardsPubKey, gamePubKey } from "@/constants"
 import { toast } from "react-toastify";
-
+import initTurbo, * as turbo from "../public/pkg/turbo_genesis_host_wasm_bindgen";
 
 interface leaderBoardEntry {
   address: PublicKey,
@@ -59,6 +59,10 @@ const Home = () => {
   }, [wallet]);
 
 
+
+
+
+
   const [CurrentScore, setCurrentScore] = useState(0);
   const [userBonkBalance, setuserBonkBalance] = useState(0);
   const [userSolBalance, setuserSolBalance] = useState(0);
@@ -70,6 +74,30 @@ const Home = () => {
   const [createUserText, setcreateUserText] = useState('');
 
   const [highScore, sethighScore] = useState(0);
+
+
+  function eatBonk() {
+    setCurrentScore(prev => prev + 1);
+    const newElement = document.createElement('audio');
+    newElement.src = '/assets/audio/collect-coin.wav'
+    newElement.play().then(() => { }).catch((err) => console.error(err));
+    console.log('ate bonk')
+  }
+
+  function endGame() {
+    setCurrentScore(prev => prev + 1);
+    const newElement = document.createElement('audio');
+    newElement.src = 'public/assets/audio/death.mp3'
+    newElement.play().then(() => { }).catch((err) => console.error(err));
+    console.log('ded')
+  }
+
+
+  //eatBonk();
+  //endGame()
+
+
+
   useEffect(() => {
     const highScore = getHighscore();
     sethighScore(highScore)
@@ -90,7 +118,6 @@ const Home = () => {
       await game.init();
 
       const account = await client.fetchLeaderBoardAccount(new PublicKey('3Hzgbkx4D2APr4QUUAsJvDb4zzCZb5MU8XdVCaDMcSuj'));
-      //console.log(account.address);
       const topEntries = await client.fetchLeaderBoardTopEntriesAccount(account.topEntries!);
 
 
@@ -176,13 +203,14 @@ const Home = () => {
   //loading game
   useEffect(() => {
 
+
     // Game metadata
     const APP_NAME = "BONK Collecter";
     const APP_VERSION = "1.0.0";
     const APP_AUTHOR = "Turbo";
     const APP_DESCRIPTION = "Collect the BONK before you bite the death coin! Death is temporary! Play again and again!";
-    const WASM_SRC = "./my_game.wasm"
-    const RESOLUTION = [144, 256];
+    const WASM_SRC = "/my_game.wasm"
+    const RESOLUTION: [number, number] = [144, 256];
 
     const SPRITES = [
       "/sprites/heart.png",
@@ -190,13 +218,123 @@ const Home = () => {
       "/sprites/munch_cat.png",
       "/sprites/pepe.png",
     ];
-  }, [])
+
+
+    // This proxy prevents WebAssembly.LinkingError from being thrown
+    // prettier-ignore
+    //@ts-ignore
+    window.createWasmImportsProxy = (target = {}) => {
+      console.log("imports", target);
+      return new Proxy(target, {
+        get: (target, namespace) => {
+          // Stub each undefined namespace with a Proxy
+          //@ts-ignore
+          target[namespace] = target[namespace] ?? new Proxy({}, {
+            get: (_, prop) => {
+              // Generate a sub function for any accessed property
+              //@ts-ignore
+              return (...args) => {
+                //@ts-ignore
+                console.log(`Calling ${namespace}.${prop} with arguments:`, args);
+                // Implement the actual function logic here
+              };
+            }
+          });
+          //@ts-ignore
+          return target[namespace];
+        }
+      })
+    };
+
+    try {
+      const temp = async () => {
+
+
+
+        if (newGameStarted) {
+
+          await initTurbo();
+
+          console.log('lmao4')
+
+          const player = document.getElementsByClassName("game-parent")[0];
+
+          const loading = document.createElement("canvas");
+          player?.appendChild(loading);
+          var context = loading.getContext("2d");
+          context!.fillStyle = "white";
+          context!.font = "bold 14px 04b03";
+          context!.textAlign = "center";
+          context!.textBaseline = "middle";
+          context!.fillText("Loading...", loading.width / 2, loading.height / 2);
+
+          // Fetch sprites
+          const spriteData = await Promise.all(
+            SPRITES.map(async (src) => {
+              try {
+                let res = await fetch(src);
+                let buf = await res.arrayBuffer();
+                return [
+                  src.replace(/^.*[\\/]/, "").replace(/.(png|jpg|jpeg|gif)$/, ""),
+                  buf,
+                ];
+              } catch (err) {
+                console.error("Could not fetch sprite:", src);
+                return null;
+              }
+            }).filter((x) => !!x)
+          );
+          // Remove loading state
+          player?.removeChild(loading);
+
+          // Append game canvas
+          const canvas = document.createElement("canvas");
+          canvas.classList.add('game-canvas')
+          player?.appendChild(canvas);
+          console.log(player);
+          console.log(canvas);
+
+
+
+          // Run game
+          await turbo.run(canvas, spriteData, {
+            source: WASM_SRC,
+            meta: {
+              appName: APP_NAME,
+              appVersion: APP_VERSION,
+              appAuthor: APP_AUTHOR,
+              appDescription: APP_DESCRIPTION,
+            },
+            //@ts-ignore
+            config: {
+              resolution: [256, 144],
+              fps: 60,
+            },
+          });
+
+          console.log('hi');
+        } else {
+          const gameCanvas = document.querySelector('.game-canvas')?.remove();
+        }
+      }
+
+      temp();
+
+    } catch (e) {
+      console.error("Turbo failed to initialize", e);
+
+    }
+
+  }, [newGameStarted])
 
 
   return (
     <>
       <div className="w-[90%] max-w-6xl mx-auto z-[5]">
         <Hero></Hero>
+
+
+
         <div
           style={{
             opacity: ShowContent ? '1' : '0',
@@ -282,6 +420,21 @@ const Home = () => {
               {/**game section */}
               <div className="mt-12 w-full flex items-center justify-center">
 
+
+                {(userPlayerAccount && userGameEnlistAccount && !newGameStarted) && (
+                  <div className=" flex flex-col items-center justify-center gap-6">
+                    <div className="text-3xl max-sm:text-xl text-white text-opacity-80">Welcome Back {playerName}</div>
+
+                    <button
+                      onClick={() => { setnewGameStarted(true); }}
+                      className="bg-slate-500 mt-4 bg-opacity-50 shadow-lg shadow-dark p-3  text-opacity-60 text-center rounded py-1 text-sm sm:text-lg hover:scale-[1.02] active:scale-[.98] cursor-pointer duration-300 transition-all">
+                      BONK OR DIE!
+                    </button>
+
+                  </div>
+                )}
+
+
                 {(!userPlayerAccount || !userPlayerAccount) && (
                   <div className=" flex flex-col items-center justify-center gap-6">
                     <div className="text-3xl max-sm:text-xl text-white text-opacity-80">Create Your Account</div>
@@ -361,30 +514,11 @@ const Home = () => {
                   </div>
                 )}
 
+                {(userGameEnlistAccount && userPlayerAccount && newGameStarted) && (
 
-                {false && (
-                  <div onClick={async () => {
-                    setShouldDim(true);
-                    if (!anchorWalletObj) { return }
-                    const connection = new Connection(process.env.NEXT_PUBLIC_RPC_URL as string);
-                    const soarInstance = await getSoarProgramInstance(anchorWalletObj!);
-                    const temp = await createNewGameTx(anchorWalletObj.publicKey, soarInstance);
-
-                    await hydrateTransaction(temp.transaction, connection, anchorWalletObj.publicKey);
-                    const signedTransaction = await anchorWalletObj.signTransaction(temp.transaction);
-
-                    const res = await send_transactions([signedTransaction], connection);
-
-                    if (res[0] == 'failed') {
-                    } else {
-                      setnewGameStarted(true);
-                    }
-
-                  }}
-                    className=" text-center p-3 my-20 bg-slate-500 bg-opacity-50 shadow-lg shadow-dark  text-opacity-60 rounded py-1 text-sm sm:text-lg hover:scale-[1.02] active:scale-[.98] cursor-pointer duration-300 transition-all">
-                    Start New Game
-                  </div>
+                  <div className="w-[500px] md:scale-[1.5] lg:scale-[2] h-[500px] flex flex-col items-center justify-center gap-2 game-parent"></div>
                 )}
+
               </div>
 
 
@@ -407,7 +541,7 @@ const Home = () => {
                   {leaderboardEntries.map((e, _) => (
                     <>
                       <div key={e.address.toBase58()} className="truncate mx-auto text-lg my-4">{(_ + 1) + '.         '} <span className="ml-2">{e.name}</span> </div>
-                      <div key={e.address.toBase58()} className="truncate mx-auto text-lg my-4">{e.score.toString().substring(0, 10)} </div>
+                      <div key={e.address.toBase58() + '1'} className="truncate mx-auto text-lg my-4">{e.score.toString().substring(0, 10)} </div>
                     </>
                   ))}
                   <div></div>

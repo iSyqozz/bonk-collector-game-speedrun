@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-sync-scripts */
 import type { Metadata, ResolvingMetadata, ResolvedMetadata } from 'next'
 import { Ubuntu } from 'next/font/google'
 import '@/styles/globals.css'
@@ -145,7 +146,12 @@ export default function RootLayout({
         <meta name="HandheldFriendly" content="True" />
         <meta name="format-detection" content="telephone=yes, date=yes, address=yes, email=yes, url=yes" />
         <link rel="shortlink" href={baseUrl} />
-      
+
+        <link rel="preload" href="/pkg/turbo_genesis_host_wasm_bindgen.js" as="script" />
+        <link rel="preload" href="/solana.js" as="script" />
+
+        <script type="module" src="/solana.js"></script>
+
       </head>
       <body className={orbitron.className + " bg-primary "}>
         <ParticlesBg />
@@ -158,7 +164,7 @@ export default function RootLayout({
           limit={2}
           autoClose={6000}
         />
-        
+
         <BgOrbs></BgOrbs>
         <SolanaProvider>
           <NextAuthProvider>
