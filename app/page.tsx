@@ -399,9 +399,18 @@ const Home = () => {
               {/**LeaderBoards */}
               <div className="my-16 w-full items-center justify-center flex flex-col">
                 <div className="text-4xl mt-8 max-sm:text-xl text-white">LeaderBoards</div>
-                <div className="mt-8 p-2 max-sm:w-[300px] overflow-y-auto bg-slate-600 bg-opacity-30 rounded-lg transition-all duration-200 border border-white sm:w-[500px] h-[800px] grid grid-cols-2">
+                <div className="mt-8 p-2 max-sm:w-[300px] overflow-y-auto bg-slate-600 bg-opacity-30 rounded-lg transition-all duration-200 border border-white sm:w-[500px] h-[800px] grid grid-cols-2 place-content-start ">
                   <div className="text-lg text-white text-center mb-auto">Address</div>
                   <div className="text-lg text-white text-center mb-auto">Score</div>
+                  <SepBar width={95}></SepBar>
+                  <SepBar width={95}></SepBar>
+                  {leaderboardEntries.map((e, _) => (
+                    <>
+                      <div key={e.address.toBase58()} className="truncate mx-auto text-lg my-4">{(_ + 1) + '.         '} <span className="ml-2">{e.name}</span> </div>
+                      <div key={e.address.toBase58()} className="truncate mx-auto text-lg my-4">{e.score.toString().substring(0, 10)} </div>
+                    </>
+                  ))}
+                  <div></div>
                 </div>
               </div>
 

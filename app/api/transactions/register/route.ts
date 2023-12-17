@@ -7,15 +7,26 @@ import { getServerSession } from "next-auth";
 import { validateUser } from "@/utils/server";
 import base58 from "bs58";
 import { Keypair } from "@solana/web3.js";
-import { getSoarProgramInstance, hydrateTransaction } from "@/magicblock";
+import { hydrateTransaction } from "@/utils/shared";
+import * as anchor from "@coral-xyz/anchor";
 import { GameClient } from "@magicblock-labs/soar-sdk";
 import { gamePubKey, leaderBoardsPubKey } from "@/constants";
+import { SoarProgram } from "@magicblock-labs/soar-sdk";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
 export function getKeypair(bs58String: string): Keypair {
     const privateKeyObject = base58.decode(bs58String);
     const privateKey = Uint8Array.from(privateKeyObject);
     const keypair = Keypair.fromSecretKey(privateKey);
     return keypair
+}
+
+export async function getSoarProgramInstance(wallet: Keypair, connection: Connection): Promise<SoarProgram> {
+
+    const provider = new anchor.AnchorProvider(connection, new NodeWallet(wallet), { skipPreflight: true })
+    //@ts-ignore
+    const client = SoarProgram.get(provider);
+    return client
 }
 
 
