@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@coral-xyz/anchor": "^0.29.0",
+    "@magicblock-labs/soar-sdk": "^0.1.21",
     "@metaplex-foundation/js": "^0.19.5",
     "@solana/spl-token": "^0.3.8",
     "@solana/wallet-adapter-base": "^0.9.23",

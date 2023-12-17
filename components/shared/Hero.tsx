@@ -28,7 +28,7 @@ return (
             opacity:ShowTitle?'1':'0',
             transform: ShowTitle?'translateY(-50px)':'translate(0px)'
         }}
-        className=' duration-500 ease-in-out transition-all  p-2 text-3xl md:text-5xl text-transparent lg:text-7xl bg-clip-text bg-secondary'>
+        className=' font-semibold duration-500 ease-in-out transition-all  p-2 text-3xl md:text-5xl text-transparent lg:text-7xl bg-clip-text bg-secondary'>
             BONK OR DIE
         </div>
         <div
