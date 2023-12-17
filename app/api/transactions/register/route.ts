@@ -14,14 +14,14 @@ import { gamePubKey, leaderBoardsPubKey } from "@/constants";
 import { SoarProgram } from "@magicblock-labs/soar-sdk";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
-export function getKeypair(bs58String: string): Keypair {
+function getKeypair(bs58String: string): Keypair {
     const privateKeyObject = base58.decode(bs58String);
     const privateKey = Uint8Array.from(privateKeyObject);
     const keypair = Keypair.fromSecretKey(privateKey);
     return keypair
 }
 
-export async function getSoarProgramInstance(wallet: Keypair, connection: Connection): Promise<SoarProgram> {
+async function getSoarProgramInstance(wallet: Keypair, connection: Connection): Promise<SoarProgram> {
 
     const provider = new anchor.AnchorProvider(connection, new NodeWallet(wallet), { skipPreflight: true })
     //@ts-ignore
@@ -79,7 +79,5 @@ async function POST(req: Request) {
 export {
     POST,
 }
-
-export const maxDuration = 180;
 
 export const dynamic = 'force-dynamic'
