@@ -11,6 +11,8 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import Image from "next/image";
 import Link from "next/link";
 import Hero from "@/components/shared/Hero";
+import SepBar from "@/components/shared/SepBar";
+import Address from "@/components/shared/Address";
 const Home = () => {
 
   //wallet and authorization states
@@ -133,7 +135,16 @@ const Home = () => {
             <Ledger toggleUsingLedger={toggleUsingLedger} usingLedger={usingLedger} />
           </div>
         ) : (
-          <div>
+          <div className="w-full">
+
+            <div className="w-[90%] max-w-6xl mx-auto flex justify-end items-start max-sm:flex-col-reverse max-sm:items-end max-sm:gap-4">
+              <div onClick={() => {disconnect();signOut({ redirect: false })}}
+                className=" text-center w-[110px] sm:w-[130px] bg-slate-500 bg-opacity-50 shadow-lg shadow-dark  text-opacity-60 rounded py-1 text-sm sm:text-lg hover:scale-[1.02] active:scale-[.98] cursor-pointer duration-300 transition-all">
+                Disconnect
+              </div>
+            </div>
+            <SepBar width={90} />
+            <Address owner={owner} ></Address>
           </div>
         )}
       </div>
