@@ -3,10 +3,12 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 
 interface AddressProps {
-    owner: string
+    owner: string,
+    userBalance: number,
+    bonkBalance: number,
 }
 
-const Address = ({ owner }: AddressProps) => {
+const Address = ({ owner, userBalance, bonkBalance }: AddressProps) => {
     const [ShouldShow, setShouldShow] = useState(false)
 
     useEffect(() => {
@@ -15,7 +17,7 @@ const Address = ({ owner }: AddressProps) => {
         }, 1600);
     }, [])
     return (
-        <div className="w-[90%] mx-auto max-w-6xl flex items-center mt-2 justify-end">
+        <div className="w-[90%] mx-auto max-w-6xl flex flex-col items-end mt-2 justify-end">
             <div
                 onClick={() => navigator.clipboard.writeText(owner)}
                 className="cursor-pointer active:scale-[.97] transition-all flex group items-center justify-center gap-1">
@@ -35,6 +37,22 @@ const Address = ({ owner }: AddressProps) => {
                     alt="copy"
                     src={'/icons/copy.png'}
                 ></Image>
+            </div>
+
+            <div
+                className="">
+                <div style={{opacity: ShouldShow ? '1' : '0'}}
+                    className="mt-2 transition-all duration-500 text-sm text-white text-opacity-50 group-hover:text-opacity-75">{ userBalance +" SOL"}
+                </div>
+
+            </div>
+
+            <div
+                className="">
+                <div style={{opacity: ShouldShow ? '1' : '0'}}
+                    className="transition-all duration-500 text-sm text-white text-opacity-50 group-hover:text-opacity-75">{ bonkBalance +" BONK"}
+                </div>
+
             </div>
         </div>
     )
