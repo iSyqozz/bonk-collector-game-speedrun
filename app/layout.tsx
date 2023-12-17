@@ -8,6 +8,10 @@ import NextAuthProvider from '@/providers/NextAuthProvider';
 import ScrollProg from '@/components/shared/ScrollProg';
 import Favicon from '@/components/shared/Favicon';
 import CookieConsentBanner from '@/components/shared/CookieConsent';
+import { Orbitron } from 'next/font/google';
+import { ParticlesBg } from '@/components/shared/ParticlesBg';
+import BgOrbs from '@/components/shared/BgOrbs';
+import "@solana/wallet-adapter-react-ui/styles.css"
 import {
   PROJECT_BASE_TITLE,
   PROJECT_DESCRIPTION,
@@ -127,7 +131,7 @@ export const viewport: Viewport = {
   colorScheme: 'dark',
 }
 
-const ubuntu = Ubuntu({ subsets: ['latin'], weight: ['300', '400', '500', '700'] })
+const orbitron = Orbitron({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800', '900',] })
 export default function RootLayout({
   children,
 }: {
@@ -140,7 +144,10 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=yes, date=yes, address=yes, email=yes, url=yes" />
         <link rel="shortlink" href={baseUrl} />
       </head>
-      <body className={ubuntu.className}>
+      <body className={orbitron.className + " bg-primary "}>
+        <ParticlesBg />
+        
+        <BgOrbs></BgOrbs>
         <SolanaProvider>
           <NextAuthProvider>
             <ScrollProg></ScrollProg>
@@ -148,7 +155,7 @@ export default function RootLayout({
             <Navbar></Navbar>
             {children}
             <Footer></Footer>
-            <CookieConsentBanner/>
+            <CookieConsentBanner />
           </NextAuthProvider>
         </SolanaProvider>
       </body>

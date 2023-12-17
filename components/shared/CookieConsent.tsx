@@ -30,10 +30,9 @@ const CookieConsentBanner = () => {
   
   return (
     <div
-      className={`z-50 fixed bottom-0 w-full p-4 flex max-sm:flex-col items-center justify-between text-white transition-opacity duration-500 ${
-        visible ? 'opacity-100' : 'opacity-0 pointer-events-none' // Use opacity for smoother transition
+      className={` bg-black z-50 fixed bottom-0 w-full p-2 flex max-sm:flex-col items-center justify-between text-white transition-opacity duration-500 bg-opacity-50 ${
+        visible ? 'opacity-80' : 'opacity-0 pointer-events-none' // Use opacity for smoother transition
       }`}
-      style={{ backgroundColor: '#374151' }}
     >
       <p className="max-sm:p-2 text-center">This dapp uses cookies to enhance the user experience.</p>
       <button

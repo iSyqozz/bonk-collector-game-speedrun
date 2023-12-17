@@ -1,15 +1,15 @@
 
 //project specific info
-export const PROJECT_NAME = ''
-export const PROJECT_BASE_TITLE = '';
-export const PROJECT_DESCRIPTION = '';
+export const PROJECT_NAME = 'BONK Collector'
+export const PROJECT_BASE_TITLE = 'BONK Collector | Home';
+export const PROJECT_DESCRIPTION = 'Collect the BONK before you bite the death coin! Death is temporary! Play again and again!';
 
 
 //developer info
-export const CREATOR_NAME = '';
-export const CREATOR_TWITTER_LINK = '';
-export const CREATOR_TWITTER_HANDLE = '';
-export const CREATOR_GITHUB_LINK = '';
+export const CREATOR_NAME = 'iSy & Suizzle';
+export const CREATOR_TWITTER_LINK = 'https://twitter.com/iSyqozz512';
+export const CREATOR_TWITTER_HANDLE = '@iSyqozz512';
+export const CREATOR_GITHUB_LINK = 'https://github.com/iSyqozz';
 
 
 //project specific social links
@@ -27,10 +27,8 @@ export const PROJECT_ATLAS_LINK = '/';
 export const PROJECT_TWITTER_HANDLE = '/'
 
 
-
 //used when signing users with offline message signing
-export const SIGN_IN_MESSAGE = 'Sign in to [Your DApp Name]';
-
+export const SIGN_IN_MESSAGE = 'Sign in to start collecting your bonk anon!';
 
 //useful api endpoints
 export const MAGIC_EDEN_API_URL = 'api-mainnet.magiceden.dev/v2 ';
