@@ -22,7 +22,7 @@ const Hero = () => {
     },[])
   
 return (
-    <div className='transition-all mt-32 w-full flex flex-col items-center justify-center gap-4'>
+    <div className='mt-48 transition-all  w-full flex flex-col items-center justify-center gap-4'>
         <div
         style={{
             opacity:ShowTitle?'1':'0',

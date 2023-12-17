@@ -12,6 +12,7 @@ import { Orbitron } from 'next/font/google';
 import { ParticlesBg } from '@/components/shared/ParticlesBg';
 import BgOrbs from '@/components/shared/BgOrbs';
 import "@solana/wallet-adapter-react-ui/styles.css"
+
 import Music from '@/components/shared/Music';
 import {
   PROJECT_BASE_TITLE,
@@ -144,10 +145,19 @@ export default function RootLayout({
         <meta name="HandheldFriendly" content="True" />
         <meta name="format-detection" content="telephone=yes, date=yes, address=yes, email=yes, url=yes" />
         <link rel="shortlink" href={baseUrl} />
+      
       </head>
       <body className={orbitron.className + " bg-primary "}>
         <ParticlesBg />
         <Music />
+
+        <ToastContainer
+          style={{ zIndex: '1000000001', position: 'fixed' }}
+          pauseOnHover
+          position='top-center'
+          limit={2}
+          autoClose={6000}
+        />
         
         <BgOrbs></BgOrbs>
         <SolanaProvider>

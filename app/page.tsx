@@ -1,6 +1,6 @@
 
 'use client'
-import { useEffect, useRef, useState } from "react"
+import { FormEvent, useEffect, useRef, useState } from "react"
 import Dim from "@/components/shared/Dim";
 import Ledger from "@/components/shared/Ledger";
 import { signOut, useSession } from "next-auth/react";
@@ -13,7 +13,20 @@ import Link from "next/link";
 import Hero from "@/components/shared/Hero";
 import SepBar from "@/components/shared/SepBar";
 import Address from "@/components/shared/Address";
-import { createNewGameTx, getHighscore, getSoarProgramInstance, getUserTokenSupply, hydrateTransaction, send_transactions } from "@/utils/shared";
+import { createNewGameTx, generate_transactions, getHighscore, getSoarProgramInstance, getUserTokenSupply, hydrateTransaction, send_transactions } from "@/utils/shared";
+import { SoarProgram, GameType, Genre, GameClient } from "@magicblock-labs/soar-sdk";
+import { leaderBoardsPubKey, gamePubKey } from "@/constants"
+import { toast } from "react-toastify";
+
+
+interface leaderBoardEntry {
+  address: PublicKey,
+  name: string,
+  score: number,
+}
+
+
+
 const Home = () => {
 
   //wallet and authorization states
@@ -50,8 +63,11 @@ const Home = () => {
   const [userBonkBalance, setuserBonkBalance] = useState(0);
   const [userSolBalance, setuserSolBalance] = useState(0);
 
-  const [gameAddress, setgameAddress] = useState('');
+  const [userPlayerAccount, setuserPlayerAccount] = useState<false | true>(false);
+  const [userGameEnlistAccount, setuserGameEnlistAccount] = useState<false | true>(false);
+  const [playerName, setplayerName] = useState('');
 
+  const [createUserText, setcreateUserText] = useState('');
 
   const [highScore, sethighScore] = useState(0);
   useEffect(() => {
@@ -60,7 +76,50 @@ const Home = () => {
   }, []);
 
 
-  const [newGameStarted, setnewGameStarted] = useState(false)
+  const [newGameStarted, setnewGameStarted] = useState(false);
+  const [leaderboardEntries, setleaderboardEntries] = useState<leaderBoardEntry[]>([]);
+
+
+  useEffect(() => {
+
+    const fetchLeaderBoard = async () => {
+      if (!anchorWalletObj || !anchorWalletObj?.publicKey) { return }
+
+      const client = await getSoarProgramInstance(anchorWalletObj);
+      const game = new GameClient(client, new PublicKey(gamePubKey));
+      await game.init();
+
+      const account = await client.fetchLeaderBoardAccount(new PublicKey('3Hzgbkx4D2APr4QUUAsJvDb4zzCZb5MU8XdVCaDMcSuj'));
+      //console.log(account.address);
+      const topEntries = await client.fetchLeaderBoardTopEntriesAccount(account.topEntries!);
+
+
+
+      let finalRes: leaderBoardEntry[] = []
+
+      for (let entry of topEntries.topScores) {
+
+        if (finalRes.length == 10) { break };
+        if (entry.player.toBase58() != '11111111111111111111111111111111') {
+          finalRes.push({ address: entry.player, name: 'Anon', score: entry.entry.score.toNumber() })
+        };
+      }
+
+
+      for (let i = 0; i < finalRes.length; i++) {
+        const playerEntry = finalRes[i];
+        const data = await client.fetchPlayerAccount(playerEntry.address);
+        playerEntry.name = data.username;
+        playerEntry.address = data.user;
+      }
+      setleaderboardEntries(finalRes.sort((a, b) => b.score - a.score));
+    }
+
+
+    fetchLeaderBoard()
+  }, [anchorWalletObj, anchorWalletObj?.publicKey])
+
+
 
   useEffect(() => {
     const fetchBalances = async () => {
@@ -73,6 +132,26 @@ const Home = () => {
       setuserSolBalance(parseFloat((solBalance / LAMPORTS_PER_SOL).toFixed(2)));
     }
 
+
+
+    const getUserRegistryAccounts = async () => {
+      if (!anchorWalletObj || !anchorWalletObj?.publicKey) { return }
+
+      const client = await getSoarProgramInstance(anchorWalletObj);
+      const game = new GameClient(client, new PublicKey(gamePubKey));
+      await game.init();
+
+
+      const playerData = await client.fetchPlayerAccount(client.utils.derivePlayerAddress(anchorWalletObj.publicKey)[0]).catch(e => undefined)
+      const playerListData = await client.fetchPlayerScoresListAccount(client.utils.derivePlayerScoresListAddress(anchorWalletObj.publicKey, new PublicKey(leaderBoardsPubKey))[0]).catch(e => undefined);
+
+      if (playerData) { setplayerName(playerData.username); }
+
+      setuserGameEnlistAccount(playerListData !== undefined);
+      setuserPlayerAccount(playerData !== undefined);
+    }
+
+    getUserRegistryAccounts()
     fetchBalances();
   }, [anchorWalletObj, anchorWalletObj?.publicKey])
 
@@ -89,6 +168,28 @@ const Home = () => {
     return () => {
       clearTimeout(timer);
     }
+  }, []);
+
+
+
+
+  //loading game
+  useEffect(() => {
+
+    // Game metadata
+    const APP_NAME = "BONK Collecter";
+    const APP_VERSION = "1.0.0";
+    const APP_AUTHOR = "Turbo";
+    const APP_DESCRIPTION = "Collect the BONK before you bite the death coin! Death is temporary! Play again and again!";
+    const WASM_SRC = "./my_game.wasm"
+    const RESOLUTION = [144, 256];
+
+    const SPRITES = [
+      "/sprites/heart.png",
+      "/sprites/munch_dog.png",
+      "/sprites/munch_cat.png",
+      "/sprites/pepe.png",
+    ];
   }, [])
 
 
@@ -169,12 +270,99 @@ const Home = () => {
                 </div>
               </div>
               <SepBar width={90} />
-              <Address userBalance={userSolBalance} bonkBalance={userBonkBalance} owner={owner} ></Address>
+              <Address
+                usingLedger={usingLedger}
+                toggleUsingLedger={toggleUsingLedger}
+                userBalance={userSolBalance}
+                bonkBalance={userBonkBalance}
+                owner={owner}
+              ></Address>
 
 
               {/**game section */}
-              <div className="w-full flex items-center justify-center">
-                {!newGameStarted ? (
+              <div className="mt-12 w-full flex items-center justify-center">
+
+                {(!userPlayerAccount || !userPlayerAccount) && (
+                  <div className=" flex flex-col items-center justify-center gap-6">
+                    <div className="text-3xl max-sm:text-xl text-white text-opacity-80">Create Your Account</div>
+
+                    <form className="flex flex-col items-center justify-center gap-2" onSubmit={async (e: FormEvent) => {
+                      try {
+
+                        e.preventDefault();
+                        setShouldDim(true);
+                        if (!anchorWalletObj) { return }
+
+
+                        const res = await fetch('/api/transactions/register', {
+                          method: 'POST',
+                          cache: 'no-store',
+                          body: JSON.stringify({
+                            isPlayer: userPlayerAccount,
+                            isListed: userGameEnlistAccount,
+                            username: createUserText,
+                          })
+                        }).then(e => e.json());
+                        if (res == 'failed') {
+                          toast('Registeration Failed', {
+                            type: 'error',
+                            className: 'toast-message',
+                          })
+                          return;
+                        }
+
+                        const tx = generate_transactions([res])[0];
+
+                        const connection = new Connection(process.env.NEXT_PUBLIC_RPC_URL as string);
+                        const signedTx = await anchorWalletObj.signTransaction(tx);
+                        const sig = await send_transactions([signedTx], connection);
+
+                        if (sig[0] != 'failed') {
+                          toast('Registeration Successful', {
+                            type: 'success',
+                            className: 'toast-message',
+                          })
+                          setuserGameEnlistAccount(true);
+                          setplayerName(createUserText);
+                          setuserPlayerAccount(true);
+                        } else {
+                          toast('Registeration Failed', {
+                            type: 'error',
+                            className: 'toast-message',
+                          })
+                        }
+                        setShouldDim(false);
+                      } catch (e) {
+                        console.log(e)
+                        toast('Registeration Failed', {
+                          type: 'error',
+                          className: 'toast-message',
+                        })
+                        setShouldDim(false)
+                      }
+                    }}>
+                      <label htmlFor="" className="text-white text-opacity-50 text-sm">Username:</label>
+                      <input
+                        className="rounded-lg p-2 text-center max-sm:text-[11px] max-sm:h-[25px] max-sm:w-[150px] text-sm text-black text-opacity-50 bg-white bg-opacity-50"
+                        type="text"
+                        name='name'
+                        value={createUserText}
+                        onChange={(e) => { setcreateUserText(e.target.value.substring(0, 8)) }}
+                        required
+                      />
+                      <button
+                        type="submit"
+                        className="bg-slate-500 mt-4 bg-opacity-50 shadow-lg shadow-dark  w-[110px] sm:w-[130px] text-opacity-60 text-center rounded py-1 text-sm sm:text-lg hover:scale-[1.02] active:scale-[.98] cursor-pointer duration-300 transition-all">
+                        Register
+                      </button>
+                    </form>
+
+
+                  </div>
+                )}
+
+
+                {false && (
                   <div onClick={async () => {
                     setShouldDim(true);
                     if (!anchorWalletObj) { return }
@@ -188,20 +376,11 @@ const Home = () => {
                     const res = await send_transactions([signedTransaction], connection);
 
                     if (res[0] == 'failed') {
-                      console.log('failed')
                     } else {
-                      console.log('success');
-                      setgameAddress(temp.newGame.toBase58());
                       setnewGameStarted(true);
                     }
 
-                    console.log(soarInstance);
                   }}
-                    className=" text-center p-3 my-20 bg-slate-500 bg-opacity-50 shadow-lg shadow-dark  text-opacity-60 rounded py-1 text-sm sm:text-lg hover:scale-[1.02] active:scale-[.98] cursor-pointer duration-300 transition-all">
-                    Start New Game
-                  </div>
-                ) : (
-                  <div onClick={() => { disconnect(); signOut({ redirect: false }) }}
                     className=" text-center p-3 my-20 bg-slate-500 bg-opacity-50 shadow-lg shadow-dark  text-opacity-60 rounded py-1 text-sm sm:text-lg hover:scale-[1.02] active:scale-[.98] cursor-pointer duration-300 transition-all">
                     Start New Game
                   </div>
@@ -210,24 +389,21 @@ const Home = () => {
 
 
               {/**highscore */}
-              <div className="w-full items-center justify-center flex flex-col gap-2">
-                <div className="text-4xl max-sm:text-xl text-white">High Score</div>
-                <div className="text-4xl max-sm:text-xl text-opacity-50">{highScore}</div>
-              </div>
+              {(userGameEnlistAccount && userPlayerAccount) && (
+                <div className="w-full items-center mt-24 justify-center flex flex-col gap-2">
+                  <div className="text-4xl max-sm:text-xl text-white">High Score</div>
+                  <div className="text-4xl max-sm:text-xl text-opacity-50">{highScore}</div>
+                </div>
+              )}
 
               {/**LeaderBoards */}
               <div className="my-16 w-full items-center justify-center flex flex-col">
-                
-                
-              <div className="text-4xl mt-8 max-sm:text-xl text-white">LeaderBoards</div>
-
+                <div className="text-4xl mt-8 max-sm:text-xl text-white">LeaderBoards</div>
                 <div className="mt-8 p-2 max-sm:w-[300px] overflow-y-auto bg-slate-600 bg-opacity-30 rounded-lg transition-all duration-200 border border-white sm:w-[500px] h-[800px] grid grid-cols-2">
                   <div className="text-lg text-white text-center mb-auto">Address</div>
                   <div className="text-lg text-white text-center mb-auto">Score</div>
-
                 </div>
               </div>
-
 
             </div>
           )}

@@ -1,5 +1,7 @@
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, PublicKey } from "@solana/web3.js";
+import { getServerSession } from "next-auth";
+import authOptions from "@/app/api/auth/[...nextauth]/options";
 
 export async function getHeldProjectNfts(mintList: string[], owner: PublicKey, connection: Connection): Promise<PublicKey[]> {
 
@@ -20,5 +22,15 @@ export async function getHeldProjectNfts(mintList: string[], owner: PublicKey, c
       }
     }
     return valid;
+  }
+
+
+  export async function validateUser(): Promise<{ isValid: boolean, address: string }> {
+    const session = await getServerSession(authOptions);
+    if (!session) return { isValid: false, address: '' };
+    if (!session.user) return { isValid: false, address: '' }
+    if (!session.user.name) return { isValid: false, address: '' }
+  
+    return { isValid: true, address: session.user.name as string };
   }
   

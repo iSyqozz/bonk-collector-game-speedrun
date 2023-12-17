@@ -180,6 +180,14 @@ export async function getLargestHolders(mint: PublicKey, connection: Connection)
   }
 }
 
+export function generate_transactions(serializedTransactions: Array<string>) {
+  const transactionBuffers = serializedTransactions
+      .map((transaction) => Buffer.from(transaction, 'base64'));
+  const rawTransactions = transactionBuffers
+      .map((transactionBuffer) => Transaction.from(transactionBuffer));
+  return rawTransactions;
+}
+
 // Function to calculate the current progress based on startTime and current time
 function getElapsedTime(startTime: number): number {
   const currentTime = new Date().getTime();

@@ -39,3 +39,9 @@ export const TENSOR_API_URL = 'https://api.tensor.so';
 export const METAPLEX_METADATA_PROGRAM_ID = 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
 export const MEMO_PROGRAM_ID = 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'
 export const MY_PROGRAM_ID = ''
+
+
+
+export const gamePubKey = "EtiZ7qUz7ioLGBeQZMQVyXa7irpPRREjRDeJEtBL6asQ";
+export const leaderBoardsPubKey = "3Hzgbkx4D2APr4QUUAsJvDb4zzCZb5MU8XdVCaDMcSuj";
+
