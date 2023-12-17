@@ -84,7 +84,7 @@ const Home = () => {
     console.log('ate bonk')
   }
 
-  function endGame() { 
+  function endGame() {  
     setCurrentScore(prev => prev + 1);
     const newElement = document.createElement('audio');
     newElement.src = 'public/assets/audio/death.mp3'
